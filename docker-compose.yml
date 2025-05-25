@@ -8,45 +8,51 @@ services:
             dockerfile: Dockerfile
             platforms: ['linux/arm64']
         container_name: laravel_apache
-        restart: unless-stopped
+        restart: always
         working_dir: /var/www/html
         volumes:
             - ./:/var/www/html
-            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+            - ./docker/php/production.ini:/usr/local/etc/php/conf.d/local.ini
             - ./docker/apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
         ports:
-            - "8080:80"      # Apache écoute sur le port 80 dans le conteneur
+            - "80:80"
         networks:
             - laravel_network
         depends_on:
             - mysql
+        environment:
+            APP_ENV: production
+            APP_DEBUG: false
 
     # Base de données MySQL (inchangé)
     mysql:
         image: mysql:8.0
         container_name: laravel_mysql
-        restart: unless-stopped
+        restart: always
         platform: linux/arm64
         environment:
-            MYSQL_DATABASE: laravel_task_manager
-            MYSQL_ROOT_PASSWORD: root_password
-            MYSQL_USER: laravel_user
-            MYSQL_PASSWORD: laravel_password
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
         volumes:
             - mysql_data:/var/lib/mysql
             - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
         networks:
             - laravel_network
+        command: --default-authentication-plugin=mysql_native_password
 
     phpmyadmin:
         image: arm64v8/phpmyadmin
         container_name: laravel_phpmyadmin
+        restart: always
         ports:
             - "8081:80"
         environment:
             PMA_HOST: mysql
-            PMA_USER: root
-            PMA_PASSWORD: root_password
+            PMA_USER: ${DB_USERNAME}
+            PMA_PASSWORD: ${DB_PASSWORD}
+            UPLOAD_LIMIT: 300M
         networks:
             - laravel_network
         depends_on:
@@ -54,6 +60,7 @@ services:
 
 volumes:
     mysql_data:
+        driver: local
 
 networks:
     laravel_network:
