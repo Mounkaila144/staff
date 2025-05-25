@@ -10,24 +10,27 @@ use Illuminate\Support\Facades\Validator;
 
 class CreateAdminCommand extends Command
 {
-    protected $signature = 'admin:create {email} {password} {--name=}';
+    protected $signature = 'admin:create {email} {password} {--first-name=} {--last-name=}';
     protected $description = 'Créer un compte administrateur';
 
     public function handle()
     {
         $email = $this->argument('email');
         $password = $this->argument('password');
-        $name = $this->option('name') ?? 'Administrateur';
+        $firstName = $this->option('first-name') ?? 'Admin';
+        $lastName = $this->option('last-name') ?? 'NigerDev';
 
         // Validation des données
         $validator = Validator::make([
             'email' => $email,
             'password' => $password,
-            'name' => $name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
         ], [
             'email' => ['required', 'email', 'unique:users'],
             'password' => ['required', 'min:8'],
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
         ]);
 
         if ($validator->fails()) {
@@ -39,16 +42,18 @@ class CreateAdminCommand extends Command
 
         try {
             $user = User::create([
-                'full_name' => $name,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
                 'email' => $email,
                 'password' => Hash::make($password),
                 'role' => 'admin',
+                'email_verified_at' => now(),
             ]);
 
             $this->info('Compte administrateur créé avec succès !');
             $this->table(
-                ['ID', 'Nom', 'Email', 'Rôle'],
-                [[$user->id, $user->full_name, $user->email, $user->role]]
+                ['ID', 'Prénom', 'Nom', 'Email', 'Rôle'],
+                [[$user->id, $user->first_name, $user->last_name, $user->email, $user->role]]
             );
 
             return 0;
