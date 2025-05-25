@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+    # Remplace "app" + "nginx" par un seul service Apache
+    apache:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            platforms: ['linux/arm64']
+        container_name: laravel_apache
+        restart: unless-stopped
+        working_dir: /var/www/html
+        volumes:
+            - ./:/var/www/html
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+            - ./docker/apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
+        ports:
+            - "8080:80"      # Apache écoute sur le port 80 dans le conteneur
+        networks:
+            - laravel_network
+        depends_on:
+            - mysql
+
+    # Base de données MySQL (inchangé)
+    mysql:
+        image: mysql:8.0
+        container_name: laravel_mysql
+        restart: unless-stopped
+        platform: linux/arm64
+        environment:
+            MYSQL_DATABASE: laravel_task_manager
+            MYSQL_ROOT_PASSWORD: root_password
+            MYSQL_USER: laravel_user
+            MYSQL_PASSWORD: laravel_password
+        volumes:
+            - mysql_data:/var/lib/mysql
+            - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+        networks:
+            - laravel_network
+
+    phpmyadmin:
+        image: arm64v8/phpmyadmin
+        container_name: laravel_phpmyadmin
+        ports:
+            - "8081:80"
+        environment:
+            PMA_HOST: mysql
+            PMA_USER: root
+            PMA_PASSWORD: root_password
+        networks:
+            - laravel_network
+        depends_on:
+            - mysql
+
+volumes:
+    mysql_data:
+
+networks:
+    laravel_network:
+        driver: bridge
