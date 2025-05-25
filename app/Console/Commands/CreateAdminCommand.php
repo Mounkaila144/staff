@@ -3,36 +3,58 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class CreateAdminCommand extends Command
 {
-    protected $signature = 'make:admin {--email=} {--password=}';
+    protected $signature = 'admin:create {email} {password} {--name=}';
     protected $description = 'Créer un compte administrateur';
 
     public function handle()
     {
-        $email = $this->option('email') ?: $this->ask('Email de l\'administrateur');
-        $password = $this->option('password') ?: $this->secret('Mot de passe');
+        $email = $this->argument('email');
+        $password = $this->argument('password');
+        $name = $this->option('name') ?? 'Administrateur';
 
-        if (User::where('email', $email)->exists()) {
-            $this->error('Un utilisateur avec cet email existe déjà.');
+        // Validation des données
+        $validator = Validator::make([
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ], [
+            'email' => ['required', 'email', 'unique:users'],
+            'password' => ['required', 'min:8'],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            foreach ($validator->errors()->all() as $error) {
+                $this->error($error);
+            }
             return 1;
         }
 
-        $firstName = $this->ask('Prénom');
-        $lastName = $this->ask('Nom');
+        try {
+            $user = User::create([
+                'full_name' => $name,
+                'email' => $email,
+                'password' => Hash::make($password),
+                'role' => 'admin',
+            ]);
 
-        User::create([
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $email,
-            'password' => bcrypt($password),
-            'role' => 'admin',
-            'email_verified_at' => now()
-        ]);
+            $this->info('Compte administrateur créé avec succès !');
+            $this->table(
+                ['ID', 'Nom', 'Email', 'Rôle'],
+                [[$user->id, $user->full_name, $user->email, $user->role]]
+            );
 
-        $this->info("Administrateur créé avec succès : {$email}");
-        return 0;
+            return 0;
+        } catch (\Exception $e) {
+            $this->error('Erreur lors de la création du compte administrateur : ' . $e->getMessage());
+            return 1;
+        }
     }
 }
