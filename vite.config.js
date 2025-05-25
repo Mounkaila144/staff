@@ -8,20 +8,19 @@ export default defineConfig({
             refresh: true,
         }),
     ],
-    server: {
-        https: true,
-        host: 'staff.nigerdev.com',
-    },
     build: {
-        manifest: true,
-        outDir: 'public/build',
-        assetsDir: 'assets',
+        // Configuration pour la production
         rollupOptions: {
             output: {
-                assetFileNames: 'assets/[name]-[hash][extname]',
-                chunkFileNames: 'assets/[name]-[hash].js',
-                entryFileNames: 'assets/[name]-[hash].js',
+                manualChunks: undefined,
             },
         },
     },
+    // Configuration pour forcer HTTPS en production
+    server: {
+        https: process.env.APP_ENV === 'production',
+        host: process.env.APP_ENV === 'production' ? 'staff.nigerdev.com' : 'localhost',
+    },
+    // Base URL pour les assets
+    base: process.env.APP_ENV === 'production' ? 'https://staff.nigerdev.com/' : '/',
 });

@@ -2,6 +2,7 @@
 
 return [
     'timezone' => 'Europe/Paris',
+    'force_https' => env('APP_FORCE_HTTPS', false),
     /*
     |--------------------------------------------------------------------------
     | Application Name

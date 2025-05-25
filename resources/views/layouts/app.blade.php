@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
         <title>{{ config('app.name', 'NigerDev') }}</title>
 
@@ -16,8 +17,9 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script>
-            // Forcer HTTPS sur les assets
+            // Forcer HTTPS sur les assets et formulaires
             if (window.location.protocol === 'https:') {
+                // Forcer HTTPS sur les assets
                 const links = document.getElementsByTagName('link');
                 const scripts = document.getElementsByTagName('script');
                 
@@ -32,6 +34,16 @@
                         scripts[i].src = scripts[i].src.replace('http:', 'https:');
                     }
                 }
+
+                // Forcer HTTPS sur les formulaires
+                document.addEventListener('DOMContentLoaded', function() {
+                    const forms = document.getElementsByTagName('form');
+                    for (let i = 0; i < forms.length; i++) {
+                        if (forms[i].action.startsWith('http:')) {
+                            forms[i].action = forms[i].action.replace('http:', 'https:');
+                        }
+                    }
+                });
             }
         </script>
     </head>
