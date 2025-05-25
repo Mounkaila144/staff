@@ -1,12 +1,9 @@
-version: '3.8'
-
 services:
-    # Remplace "app" + "nginx" par un seul service Apache
     apache:
         build:
             context: .
             dockerfile: Dockerfile
-            platforms: ['linux/arm64']
+            platforms: ['linux/amd64']  # Changé de arm64 à amd64
         container_name: laravel_apache
         restart: always
         working_dir: /var/www/html
@@ -24,12 +21,11 @@ services:
             APP_ENV: production
             APP_DEBUG: false
 
-    # Base de données MySQL (inchangé)
     mysql:
         image: mysql:8.0
         container_name: laravel_mysql
         restart: always
-        platform: linux/arm64
+        platform: linux/amd64  # Changé de arm64 à amd64
         environment:
             MYSQL_DATABASE: ${DB_DATABASE}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
@@ -43,7 +39,7 @@ services:
         command: --default-authentication-plugin=mysql_native_password
 
     phpmyadmin:
-        image: arm64v8/phpmyadmin
+        image: phpmyadmin/phpmyadmin  # Image standard compatible AMD64
         container_name: laravel_phpmyadmin
         restart: always
         ports:
