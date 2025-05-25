@@ -15,6 +15,25 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script>
+            // Forcer HTTPS sur les assets
+            if (window.location.protocol === 'https:') {
+                const links = document.getElementsByTagName('link');
+                const scripts = document.getElementsByTagName('script');
+                
+                for (let i = 0; i < links.length; i++) {
+                    if (links[i].href.startsWith('http:')) {
+                        links[i].href = links[i].href.replace('http:', 'https:');
+                    }
+                }
+                
+                for (let i = 0; i < scripts.length; i++) {
+                    if (scripts[i].src.startsWith('http:')) {
+                        scripts[i].src = scripts[i].src.replace('http:', 'https:');
+                    }
+                }
+            }
+        </script>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">

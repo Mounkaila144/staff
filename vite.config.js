@@ -8,4 +8,20 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        https: true,
+        host: 'staff.nigerdev.com',
+    },
+    build: {
+        manifest: true,
+        outDir: 'public/build',
+        assetsDir: 'assets',
+        rollupOptions: {
+            output: {
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js',
+            },
+        },
+    },
 });
