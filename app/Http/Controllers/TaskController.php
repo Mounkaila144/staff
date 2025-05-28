@@ -34,28 +34,37 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'required|in:pending,in_progress,completed,for_validation',
-            'user_id' => 'required|exists:users,id'
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'assigned_to' => 'required_if:' . (Auth::user()->isAdmin() ? 'true' : 'false') . '|exists:users,id'
         ]);
-    
-        // ⚠️ NE PAS utiliser directement $validated
-        // Car il contient 'user_id' mais la DB attend 'assigned_to'
-        
-        // ✅ Mapper correctement les données
+
+        // Pour les non-admin, assigner la tâche à eux-mêmes
+        if (!Auth::user()->isAdmin()) {
+            $validated['assigned_to'] = Auth::id();
+        }
+
         $taskData = [
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'status' => $validated['status'],
-            'assigned_to' => $validated['user_id'], // 🔄 Mapper user_id vers assigned_to
-            'created_by' => Auth::id(), // 🔄 Ajouter l'utilisateur qui crée la tâche
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'status' => 'pending',
+            'assigned_to' => $validated['assigned_to'],
+            'created_by' => Auth::id(),
         ];
-    
-        $task = Task::create($taskData); // ✅ Utiliser les données mappées
-    
+
+        $task = Task::create($taskData);
+
+        // Réponse JSON pour les requêtes AJAX
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tâche créée avec succès.',
+                'task' => $task->load('assignedUser')
+            ]);
+        }
+
         return redirect()->route('tasks.show', $task)
             ->with('success', 'Tâche créée avec succès.');
     }
@@ -80,23 +89,34 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'required|in:pending,in_progress,completed,for_validation',
-            'user_id' => 'required|exists:users,id'
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'assigned_to' => 'required_if:' . (Auth::user()->isAdmin() ? 'true' : 'false') . '|exists:users,id'
         ]);
 
-        // Mapper user_id vers assigned_to
+        // Pour les non-admin, garder l'assignation actuelle
+        if (!Auth::user()->isAdmin()) {
+            $validated['assigned_to'] = $task->assigned_to;
+        }
+
         $taskData = [
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'status' => $validated['status'],
-            'assigned_to' => $validated['user_id'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'assigned_to' => $validated['assigned_to'],
         ];
 
         $task->update($taskData);
+
+        // Réponse JSON pour les requêtes AJAX
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tâche mise à jour avec succès.',
+                'task' => $task->fresh()->load('assignedUser')
+            ]);
+        }
 
         return redirect()->route('tasks.show', $task)
             ->with('success', 'Tâche mise à jour avec succès.');
@@ -107,6 +127,14 @@ class TaskController extends Controller
         $this->authorize('delete', $task);
         
         $task->delete();
+
+        // Réponse JSON pour les requêtes AJAX
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tâche supprimée avec succès.'
+            ]);
+        }
 
         return redirect()->route('dashboard')
             ->with('success', 'Tâche supprimée avec succès.');
@@ -122,6 +150,12 @@ class TaskController extends Controller
 
         // Empêcher les stagiaires de mettre le statut à "Terminé"
         if (!$request->user()->isAdmin() && $request->status === 'completed') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Seul un administrateur peut marquer une tâche comme terminée.'
+                ], 403);
+            }
             return redirect()->back()->with('error', 'Seul un administrateur peut marquer une tâche comme terminée.');
         }
 
@@ -129,6 +163,15 @@ class TaskController extends Controller
             'status' => $request->status,
             'completed_at' => $request->status === 'completed' ? now() : null
         ]);
+
+        // Réponse JSON pour les requêtes AJAX
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Statut mis à jour avec succès.',
+                'task' => $task->fresh()->load('assignedUser')
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Statut mis à jour avec succès');
     }

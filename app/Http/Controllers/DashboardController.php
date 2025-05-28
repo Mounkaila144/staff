@@ -36,14 +36,24 @@ class DashboardController extends Controller
         // Récupérer les tâches avec pagination
         $tasks = $query->with('assignedUser')->latest()->paginate(10);
 
-        // Statistiques
-        $totalTasks = Task::count();
-        $pendingTasks = Task::where('status', 'pending')->count();
-        $completedTasks = Task::where('status', 'completed')->count();
-        $inProgressTasks = Task::where('status', 'in_progress')->count();
+        // Statistiques - différentes selon le rôle
+        if (auth()->user()->isAdmin()) {
+            // Administrateur : voir toutes les tâches
+            $totalTasks = Task::count();
+            $pendingTasks = Task::where('status', 'pending')->count();
+            $completedTasks = Task::where('status', 'completed')->count();
+            $inProgressTasks = Task::where('status', 'in_progress')->count();
+        } else {
+            // Utilisateur non-admin : voir uniquement ses tâches
+            $userId = auth()->id();
+            $totalTasks = Task::where('assigned_to', $userId)->count();
+            $pendingTasks = Task::where('assigned_to', $userId)->where('status', 'pending')->count();
+            $completedTasks = Task::where('assigned_to', $userId)->where('status', 'completed')->count();
+            $inProgressTasks = Task::where('assigned_to', $userId)->where('status', 'in_progress')->count();
+        }
 
-        // Liste des stagiaires pour le filtre
-        $interns = User::where('role', 'intern')->get();
+        // Liste des stagiaires pour le filtre (seulement pour les admins)
+        $interns = auth()->user()->isAdmin() ? User::where('role', 'intern')->get() : collect();
 
         return view('dashboard', compact(
             'tasks',

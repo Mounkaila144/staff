@@ -29,15 +29,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/autorisation', [\App\Http\Controllers\AutorisationController::class, 'index'])->name('autorisation.index');
     Route::get('/autorisation/create', [\App\Http\Controllers\AutorisationController::class, 'create'])->name('autorisation.create');
     Route::post('/autorisation', [\App\Http\Controllers\AutorisationController::class, 'store'])->name('autorisation.store');
-});
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/interns', [AdminController::class, 'index'])->name('interns.index');
-    Route::get('/interns/create', [AdminController::class, 'create'])->name('interns.create');
-    Route::post('/interns', [AdminController::class, 'store'])->name('interns.store');
-    Route::get('/interns/{intern}/edit', [AdminController::class, 'edit'])->name('interns.edit');
-    Route::put('/interns/{intern}', [AdminController::class, 'update'])->name('interns.update');
-    Route::delete('/interns/{intern}', [AdminController::class, 'destroy'])->name('interns.destroy');
+    // Routes pour l'administration (seulement pour les admins)
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/interns', [AdminController::class, 'index'])->name('interns.index');
+        Route::get('/interns/create', [AdminController::class, 'create'])->name('interns.create');
+        Route::post('/interns', [AdminController::class, 'store'])->name('interns.store');
+        Route::get('/interns/{intern}/edit', [AdminController::class, 'edit'])->name('interns.edit');
+        Route::put('/interns/{intern}', [AdminController::class, 'update'])->name('interns.update');
+        Route::delete('/interns/{intern}', [AdminController::class, 'destroy'])->name('interns.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

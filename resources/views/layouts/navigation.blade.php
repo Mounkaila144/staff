@@ -1,115 +1,148 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="navbar-modern">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
+    <div class="navbar-container">
+        <div class="navbar-content">
+            <div class="navbar-left">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <img src="{{ asset('Img/image.png') }}" alt="NigerDev Logo" class="h-12 w-auto">
+                <div class="navbar-logo">
+                    <a href="{{ route('dashboard') }}" class="logo-link">
+                        <img src="{{ asset('Img/image.png') }}" alt="NigerDev Logo" class="logo-image">
+                        <span class="logo-text">NigerDev</span>
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Tableau de bord') }}
-                    </x-nav-link>
+                <div class="navbar-links">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Tableau de bord</span>
+                    </a>
                     
                     @if(auth()->user()->isAdmin())
-                        <x-nav-link :href="route('admin.interns.index')" :active="request()->routeIs('admin.interns.*')">
-                            {{ __('Gestion des stagiaires') }}
-                        </x-nav-link>
-                       
+                        <a href="{{ route('admin.interns.index') }}" class="nav-link {{ request()->routeIs('admin.interns.*') ? 'active' : '' }}">
+                            <i class="fas fa-users"></i>
+                            <span>Gestion des stagiaires</span>
+                        </a>
                     @endif
-                    <x-nav-link :href="route('salaire.index')" :active="request()->routeIs('salaire.*')">
-                            {{ __('Paiment des salaires') }}
-                        </x-nav-link>
-                    <x-nav-link :href="route('autorisation.index')" :active="request()->routeIs('autorisation.*')">
-                        {{ __('Demandes d\'autorisation') }}
-                    </x-nav-link>
+                    
+                    <a href="{{ route('salaire.index') }}" class="nav-link {{ request()->routeIs('salaire.*') ? 'active' : '' }}">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Paiement des salaires</span>
+                    </a>
+                    
+                    <a href="{{ route('autorisation.index') }}" class="nav-link {{ request()->routeIs('autorisation.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-signature"></i>
+                        <span>Demandes d'autorisation</span>
+                    </a>
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->full_name }}</div>
+            <!-- User Menu -->
+            <div class="navbar-right">
+                <div class="user-menu" x-data="{ userOpen: false }">
+                    <button @click="userOpen = !userOpen" class="user-button">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ Auth::user()->full_name }}</span>
+                            <span class="user-role">{{ Auth::user()->role === 'admin' ? 'Administrateur' : 'Stagiaire' }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down user-chevron" :class="{ 'rotate-180': userOpen }"></i>
+                    </button>
 
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
+                    <div x-show="userOpen" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         @click.away="userOpen = false"
+                         class="user-dropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-info">
+                                <div class="dropdown-user-name">{{ Auth::user()->full_name }}</div>
+                                <div class="dropdown-user-email">{{ Auth::user()->email }}</div>
                             </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <form method="POST" action="{{ route('logout') }}" class="logout-form">
                             @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
+                            <button type="submit" class="logout-button">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Se déconnecter</span>
+                            </button>
                         </form>
-                    </x-slot>
-                </x-dropdown>
+                    </div>
+                </div>
             </div>
 
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+            <!-- Mobile Hamburger -->
+            <div class="mobile-hamburger">
+                <button @click="open = !open" class="hamburger-button">
+                    <span class="hamburger-line" :class="{ 'rotate-45 translate-y-2': open }"></span>
+                    <span class="hamburger-line" :class="{ 'opacity-0': open }"></span>
+                    <span class="hamburger-line" :class="{ '-rotate-45 -translate-y-2': open }"></span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Tableau de bord') }}
-            </x-responsive-nav-link>
-            
-            @if(auth()->user()->isAdmin())
-                <x-responsive-nav-link :href="route('admin.interns.index')" :active="request()->routeIs('admin.interns.*')">
-                    {{ __('Gestion des stagiaires') }}
-                </x-responsive-nav-link>
-            @endif
-            <x-responsive-nav-link :href="route('salaire.index')" :active="request()->routeIs('salaire.*')">
-                {{ __('Paiment des salaires') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('autorisation.index')" :active="request()->routeIs('autorisation.*')">
-                {{ __('Demandes d\'autorisation') }}
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->full_name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+    <!-- Mobile Navigation Menu -->
+    <div x-show="open" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform -translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform -translate-y-2"
+         class="mobile-menu">
+        <div class="mobile-menu-content">
+            <!-- Mobile Navigation Links -->
+            <div class="mobile-nav-links">
+                <a href="{{ route('dashboard') }}" class="mobile-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                
+                @if(auth()->user()->isAdmin())
+                    <a href="{{ route('admin.interns.index') }}" class="mobile-nav-link {{ request()->routeIs('admin.interns.*') ? 'active' : '' }}">
+                        <i class="fas fa-users"></i>
+                        <span>Gestion des stagiaires</span>
+                    </a>
+                @endif
+                
+                <a href="{{ route('salaire.index') }}" class="mobile-nav-link {{ request()->routeIs('salaire.*') ? 'active' : '' }}">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Paiement des salaires</span>
+                </a>
+                
+                <a href="{{ route('autorisation.index') }}" class="mobile-nav-link {{ request()->routeIs('autorisation.*') ? 'active' : '' }}">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Demandes d'autorisation</span>
+                </a>
             </div>
 
-            <div class="mt-3 space-y-1">
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
+            <!-- Mobile User Section -->
+            <div class="mobile-user-section">
+                <div class="mobile-user-info">
+                    <div class="mobile-user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="mobile-user-details">
+                        <div class="mobile-user-name">{{ Auth::user()->full_name }}</div>
+                        <div class="mobile-user-email">{{ Auth::user()->email }}</div>
+                        <div class="mobile-user-role">{{ Auth::user()->role === 'admin' ? 'Administrateur' : 'Stagiaire' }}</div>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ route('logout') }}" class="mobile-logout-form">
                     @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
+                    <button type="submit" class="mobile-logout-button">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Se déconnecter</span>
+                    </button>
                 </form>
             </div>
         </div>
